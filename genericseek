@@ -18,7 +18,7 @@
 # increased.                                                                   #
 #                                                                              #
 # rlima@gmail.com                                                              #
-# $Id: jstop,v 2 2014/07/11 rlima Exp rlima $                                  #
+# $Id: genericseek,v 1 2015/01/09 rlima Exp rlima $                            #
 #                                                                              #
 #[ License ]-------------------------------------------------------------------#
 #                                                                              #
@@ -39,7 +39,7 @@
 # O  SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO, EXPRESSA #
 # OU  IMPLÍCITA,  INCLUINDO,  SEM  LIMITAÇÃO, AS GARANTIAS DE COMERCIALIZAÇÃO, #
 # ADEQUAÇÃO  A  UM  DETERMINADO  FIM E NÃO VIOLAÇÃO. EM NENHUM CASO OS AUTORES #
-# OU  DIREITOS  AUTORAIS  TITULARES  SER  RESPONSÁVEL POR QUALQUER RECLAMAÇÃO, #
+# OU  DIREITOS AUTORAIS TITULARES  SERÃo RESPONSÁVEIS POR QUALQUER RECLAMAÇÃO, #
 # DANOS  OU  OUTRAS  RESPONSABILIDADES,  SEJA  EM  UMA  AÇÃO DE CUMPRIMENTO DE #
 # CONTRATO OU DE OUTRA FORMA, DECORRENTE DE, OU EM CONEXÃO COM O SOFTWARE OU O #
 # USO OU OUTRAS FUNÇÕES DO SOFTWARE.                                           #
@@ -79,23 +79,63 @@
 #[ Modulos ]-------------------------------------------------------------------#
 
 use strict;
-use warnings;
+use JSON;
+use XML::Simple;
 use Config::Simple;
 
 #[ Variaveis ]-----------------------------------------------------------------#
 
+my $ds;
+my %ds;
 my $key;
 my $log;
 my $seek;
-my $pipe;
-my $erro;
+my $value;
+my $config;
 my $seekdb;
 my $output;
-my $keycount;
+my %keycount;
 my $currsize;
 my $newseekdb;
+my $xmloutput;
+my $jsonoutput;
 my $occurrence;
+my $outputformat;
 my $timestamp = time();
+my $configfile = 'genericseek.conf';
+
+$keycount{count} = '0';
+
+#[ Read config file ]----------------------------------------------------------#
+$config = new Config::Simple($configfile);
+$key = $config->param("key");
+$log = $config->param("log");
+$seekdb = $config->param("dbfile");
+$occurrence = $config->param("occurrence");
+$outputformat = $config->param("outputformat");
+
+#[ XML Output Function ]-------------------------------------------------------#
+
+sub xmlGenerate {
+	$timestamp = shift;
+	$key = shift;
+	$value = shift;
+	$xmloutput = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+	$ds = {filematch => [{timestamp => [$timestamp], key => [$key], value => [$value]}]};
+	$xmloutput .= XMLout($ds, Rootname => "");
+	return $xmloutput;
+}
+
+#[ JSON Output Function ]------------------------------------------------------#
+
+sub jsonGenerate {	
+	$timestamp = shift;
+	$key = shift;
+	$value = shift;
+	%ds = ('filematch' => [{'timestamp' => $timestamp}, {'key' => $key}, {'value' => $value}]);
+	$jsonoutput = encode_json \%ds;
+	return $jsonoutput;
+}
 
 #[ Main Script ]---------------------------------------------------------------#
 
@@ -107,26 +147,38 @@ open(LOG, $log) or die("Error trying to open the file $log\n");
 $currsize = (stat($log))[7];
 
 if ($seek =~ /$log=(\d+)\|(\d+);/){
-        if ($currsize < $2){
-                seek(LOG, 0, 0);
-        }else{
-                seek(LOG, $1, 0);
-        }
+	if ($currsize < $2){
+		seek(LOG, 0, 0);
+	}else{
+		seek(LOG, $1, 0);
+	}
 }else{
-        seek(LOG, 0, 0);
+	seek(LOG, 0, 0);
 }
 
 while(<LOG>){
-        chomp($_);
-        if($_ =~ /$occurrence/){
-                $keycount{count}++;
-        }
+	chomp($_);
+	if($_ =~ /$occurrence/){
+		$keycount{count}++;
+	}
 }
 
+$value = $keycount{count};
 $newseekdb .= $log ."=" . tell(LOG) ."|" . $currsize .";";
-#$key $keycount{'count'}";
 
 open(SEEK,"> $seekdb") or die("Error trying to open the file $seekdb\n");
 print SEEK "$newseekdb";
 close(SEEK);
 close(LOG);
+
+#[ Verify the chosen output formar, call the function and print ]--------------#
+
+if ($outputformat =~ "xml") {
+	$output .= xmlGenerate($timestamp, $key, $value);
+} elsif ($outputformat =~ "json") {
+	$output .= jsonGenerate($timestamp, $key, $value);
+} else {
+	$output .= "$key: $value\n";
+}
+
+print "$output";
