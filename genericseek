@@ -106,7 +106,7 @@ my $configfile = 'genericseek.conf';
 
 $keycount{count} = '0';
 
-#[ Read config file ]----------------------------------------------------------#
+#[ Read config file ]----------------------------------------------------------#
 $config = new Config::Simple($configfile);
 $key = $config->param("key");
 $log = $config->param("log");
@@ -171,7 +171,7 @@ print SEEK "$newseekdb";
 close(SEEK);
 close(LOG);
 
-#[ Verify the chosen output formar, call the function and print ]--------------#
+#[ Verify the chosen output formar, call the function and print ]--------------#
 
 if ($outputformat =~ "xml") {
 	$output .= xmlGenerate($timestamp, $key, $value);
