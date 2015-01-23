@@ -5,6 +5,12 @@ Counts  number  of occurrences of a stretch to the end of the log and stores the
 position  to  tell  from  where  it  stopped.  Great   for  creating  monitoring
 processes in real time logs that are being increased.
 
+Changelog
+--------------------------------------------------------------------------------
+
+2015-01-09 - v1   - First Stable Release
+2015-01-23 - v1.5 - A lot of improvements in config file read, write and recover
+
 Dependencies
 --------------------------------------------------------------------------------
 
@@ -39,7 +45,11 @@ Example:
 	dbfile="genericseek.db"
 	occurrence="error"
 	outputformat="xml"
-	
+
+NOTE:
+
+If your config file is empty for some reason, just run the script with -r option
+
 DB FILE:
 
 For  the  very  first time running the script this file must be created, so just

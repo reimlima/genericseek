@@ -18,7 +18,7 @@
 # increased.                                                                   #
 #                                                                              #
 # rlima@gmail.com                                                              #
-# $Id: genericseek,v 1 2015/01/09 rlima Exp rlima $                            #
+# $Id: genericseek,v 1.5 2015/01/23 rlima Exp rlima $                          #
 #                                                                              #
 #[ License ]-------------------------------------------------------------------#
 #                                                                              #
@@ -80,6 +80,7 @@
 
 use strict;
 use JSON;
+use Getopt::Std;
 use XML::Simple;
 use Config::Simple;
 
@@ -94,25 +95,71 @@ my $value;
 my $config;
 my $seekdb;
 my $output;
+my $exitcode;
 my %keycount;
 my $currsize;
 my $newseekdb;
 my $xmloutput;
 my $jsonoutput;
 my $occurrence;
+my $exitmessage;
 my $outputformat;
+my %opthash = ();
 my $timestamp = time();
 my $configfile = 'genericseek.conf';
 
 $keycount{count} = '0';
 
+#[ Command line option for config file recovery ]------------------------------#
+
+if ( $ARGV[0] && $ARGV[0] =~ /-r/){
+	&createConfigFile
+} elsif( $ARGV[0] && $ARGV[0] !=~ /-r/) {
+	genericExitFunc(1, "$0 just suport '-r' option");
+}
+
 #[ Read config file ]----------------------------------------------------------#
-$config = new Config::Simple($configfile);
-$key = $config->param("key");
-$log = $config->param("log");
-$seekdb = $config->param("dbfile");
-$occurrence = $config->param("occurrence");
-$outputformat = $config->param("outputformat");
+
+if( -z $configfile){
+	genericExitFunc(1, "$configfile is empty, run with '-r' option to recreate");
+} else {
+	$config = new Config::Simple($configfile);
+	$key = $config->param("key");
+	$log = $config->param("log");
+	$seekdb = $config->param("dbfile");
+	$occurrence = $config->param("occurrence");
+	$outputformat = $config->param("outputformat");
+}
+
+if($key eq "" || ref($key) eq "ARRAY"){ genericExitFunc(1, "key value is empty, fix the $configfile"); }
+if($log eq "" || ref($log) eq "ARRAY"){ genericExitFunc(1, "log value is empty, fix the $configfile"); }
+if($seekdb eq "" || ref($seekdb) eq "ARRAY"){ genericExitFunc(1, "seekdb value is empty, fix the $configfile"); }
+if($occurrence eq "" || ref($occurrence) eq "ARRAY"){ genericExitFunc(1, "occurrence value is empty, fix the $configfile"); }
+if($outputformat eq "" || ref($outputformat) eq "ARRAY"){ genericExitFunc(1, "outputformat value is empty, fix the $configfile"); }
+
+#[ Generic exit function ]-----------------------------------------------------#
+
+sub genericExitFunc {
+	$exitcode = shift;
+	$exitmessage = shift;
+	print "$exitmessage\n";
+	exit $exitcode;
+}
+
+sub createConfigFile {
+	if( -z $configfile){
+		$config = new Config::Simple(syntax=>'simple');
+		$config->param("key=", "");
+		$config->param("log=", "");
+		$config->param("seekdb=", "");
+		$config->param("occurrence=", "");
+		$config->param("outputformat=", "");
+		$config->write($configfile);
+		genericExitFunc(0, "$configfile created successfully!");
+	} else {
+		genericExitFunc(1, "$configfile is not empty");
+	}
+}
 
 #[ XML Output Function ]-------------------------------------------------------#
 
