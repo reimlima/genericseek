@@ -9,6 +9,7 @@ Changelog
 --------------------------------------------------------------------------------
 
 2015-01-09 - v1   - First Stable Release
+
 2015-01-23 - v1.5 - A lot of improvements in config file read, write and recover
 
 Dependencies
