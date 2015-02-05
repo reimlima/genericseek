@@ -145,6 +145,8 @@ sub genericExitFunc {
 	exit $exitcode;
 }
 
+#[ Config File Write Function ]------------------------------------------------#
+
 sub createConfigFile {
 	if( -z $configfile){
 		$config = new Config::Simple(syntax=>'simple');
