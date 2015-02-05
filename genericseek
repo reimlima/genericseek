@@ -136,15 +136,6 @@ if($seekdb eq "" || ref($seekdb) eq "ARRAY"){ genericExitFunc(1, "seekdb value i
 if($occurrence eq "" || ref($occurrence) eq "ARRAY"){ genericExitFunc(1, "occurrence value is empty, fix the $configfile"); }
 if($outputformat eq "" || ref($outputformat) eq "ARRAY"){ genericExitFunc(1, "outputformat value is empty, fix the $configfile"); }
 
-#[ Generic exit function ]-----------------------------------------------------#
-
-sub genericExitFunc {
-	$exitcode = shift;
-	$exitmessage = shift;
-	print "$exitmessage\n";
-	exit $exitcode;
-}
-
 #[ Config File Write Function ]------------------------------------------------#
 
 sub createConfigFile {
@@ -160,6 +151,15 @@ sub createConfigFile {
 	} else {
 		genericExitFunc(1, "$configfile is not empty");
 	}
+}
+
+#[ Generic exit function ]-----------------------------------------------------#
+
+sub genericExitFunc {
+	$exitcode = shift;
+	$exitmessage = shift;
+	print "$exitmessage\n";
+	exit $exitcode;
 }
 
 #[ XML Output Function ]-------------------------------------------------------#
