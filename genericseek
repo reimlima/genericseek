@@ -81,6 +81,7 @@
 use strict;
 use JSON;
 use XML::Simple;
+use Sys::Hostname;
 use Config::Simple;
 
 #[ Variables ]-----------------------------------------------------------------#
@@ -105,6 +106,7 @@ my $exitmessage;
 my $outputformat;
 my %opthash = ();
 my $timestamp = time();
+my $hostname = hostname;
 my $configfile = 'genericseek.conf';
 
 $keycount{count} = '0';
@@ -169,7 +171,7 @@ sub xmlGenerate {
 	$key = shift;
 	$value = shift;
 	$xmloutput = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-	$ds = {filematch => [{timestamp => [$timestamp], key => [$key], value => [$value]}]};
+	$ds = {filematch => [{hostname => [$hostname], timestamp => [$timestamp], key => [$key], value => [$value]}]};
 	$xmloutput .= XMLout($ds, Rootname => "");
 	return $xmloutput;
 }
@@ -180,7 +182,7 @@ sub jsonGenerate {
 	$timestamp = shift;
 	$key = shift;
 	$value = shift;
-	%ds = ('filematch' => [{'timestamp' => $timestamp}, {'key' => $key}, {'value' => $value}]);
+	%ds = ('filematch' => [{'hostname' => $hostname}, {'timestamp' => $timestamp}, {'key' => $key}, {'value' => $value}]);
 	$jsonoutput = encode_json \%ds;
 	return $jsonoutput;
 }
