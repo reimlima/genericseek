@@ -149,6 +149,14 @@ if ($warning >= $critical) {
 	genericExitFunc(1, $thresholdError);
 }
 
+#[ Database File Check ]-------------------------------------------------------#
+
+if (! -e $seekdb){
+	open(DBFILE,"> $seekdb") or genericExitFunc(1, "Error trying to open the file $seekdb");
+	print DBFILE "$log=0|0;";
+	close(DBFILE);
+}
+
 #[ Generic exit function ]-----------------------------------------------------#
 
 sub genericExitFunc {
@@ -157,6 +165,8 @@ sub genericExitFunc {
 	print "$exitmessage\n";
 	exit $exitcode;
 }
+
+#[ Usage Function ]------------------------------------------------------------#
 
 sub scriptUsage {
 
