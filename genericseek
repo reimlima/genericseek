@@ -18,7 +18,7 @@
 # increased.                                                                   #
 #                                                                              #
 # rlima@gmail.com                                                              #
-# $Id: genericseek,v 1.6 2015/02/05 rlima Exp rlima $                          #
+# $Id: genericseek,v 2 2015/02/05 rlima Exp rlima $                            #
 #                                                                              #
 #[ License ]-------------------------------------------------------------------#
 #                                                                              #
@@ -79,10 +79,12 @@
 #[ Modules ]-------------------------------------------------------------------#
 
 use strict;
+use warnings;
 use JSON;
+use Getopt::Std;
 use XML::Simple;
 use Sys::Hostname;
-use Config::Simple;
+use File::Basename;
 
 #[ Variables ]-----------------------------------------------------------------#
 
@@ -90,69 +92,61 @@ my $ds;
 my %ds;
 my $key;
 my $log;
+my $code;
 my $seek;
 my $value;
-my $config;
-my $seekdb;
+my $usage;
 my $output;
+my $warning;
+my $critical;
 my $exitcode;
 my %keycount;
 my $currsize;
+my $outputMsg;
 my $newseekdb;
 my $xmloutput;
 my $jsonoutput;
 my $occurrence;
+my $returnCode;
 my $exitmessage;
+my $icingaoutput;
 my $outputformat;
+my $pluginOutput;
 my %opthash = ();
+my $getoptsError;
+my $thresholdError;
+my $personalMessage;
+my $outputFormatError;
 my $timestamp = time();
 my $hostname = hostname;
-my $configfile = 'genericseek.conf';
+my $script = basename("$0");
+my $seekdb = "genericseek.db";
 
 $keycount{count} = '0';
 
-#[ Command line option for config file recovery ]------------------------------#
+#[ Command line options ]------------------------------------------------------#
 
-if ( $ARGV[0] && $ARGV[0] =~ /-r/){
-	&createConfigFile
-} elsif( $ARGV[0] && $ARGV[0] !=~ /-r/) {
-	genericExitFunc(1, "$0 just suport '-r' option");
+getopts(":l:o:k:f:w:c:", \%opthash);
+if (keys(%opthash) != 6){
+	$getoptsError = scriptUsage("You must fill all options");
+	genericExitFunc(1, $getoptsError);
 }
 
-#[ Read config file ]----------------------------------------------------------#
+$log          = $opthash{l};
+$key          = $opthash{k};
+$warning      = ($opthash{w})? "$opthash{w}" : "0";
+$critical     = ($opthash{c})? "$opthash{c}" : "0";
+$occurrence   = $opthash{o};
+$outputformat = $opthash{f};
 
-if( -z $configfile){
-	genericExitFunc(1, "$configfile is empty, run with '-r' option to recreate");
-} else {
-	$config = new Config::Simple($configfile);
-	$key = $config->param("key");
-	$log = $config->param("log");
-	$seekdb = $config->param("dbfile");
-	$occurrence = $config->param("occurrence");
-	$outputformat = $config->param("outputformat");
+if ($warning == "0") {
+	$thresholdError = scriptUsage("warning option must not be 0");
+	genericExitFunc(1, $thresholdError);
 }
 
-if($key eq "" || ref($key) eq "ARRAY"){ genericExitFunc(1, "key value is empty, fix the $configfile"); }
-if($log eq "" || ref($log) eq "ARRAY"){ genericExitFunc(1, "log value is empty, fix the $configfile"); }
-if($seekdb eq "" || ref($seekdb) eq "ARRAY"){ genericExitFunc(1, "dbfile value is empty, fix the $configfile"); }
-if($occurrence eq "" || ref($occurrence) eq "ARRAY"){ genericExitFunc(1, "occurrence value is empty, fix the $configfile"); }
-if($outputformat eq "" || ref($outputformat) eq "ARRAY"){ genericExitFunc(1, "outputformat value is empty, fix the $configfile"); }
-
-#[ Config File Write Function ]------------------------------------------------#
-
-sub createConfigFile {
-	if( -z $configfile){
-		$config = new Config::Simple(syntax=>'simple');
-		$config->param("key=", "");
-		$config->param("log=", "");
-		$config->param("dbfile=", "");
-		$config->param("occurrence=", "");
-		$config->param("outputformat=", "");
-		$config->write($configfile);
-		genericExitFunc(0, "$configfile created successfully!");
-	} else {
-		genericExitFunc(1, "$configfile is not empty");
-	}
+if ($warning >= $critical) {
+	$thresholdError = scriptUsage("critical option must be bigger than warning");
+	genericExitFunc(1, $thresholdError);
 }
 
 #[ Generic exit function ]-----------------------------------------------------#
@@ -164,14 +158,70 @@ sub genericExitFunc {
 	exit $exitcode;
 }
 
+sub scriptUsage {
+
+	$personalMessage = shift;
+
+	$usage  = "$personalMessage\n\n";
+	$usage .= "Usage: $script -l <log> -k <key> -o '<log occurrence>' -f <outputformat> -w <warning> -c <critical>\n\n";
+	$usage .= "\t-l: logfile, Ex.: /var/log/message\n";
+	$usage .= "\t-k: key, something to be used as output message Ex.: \"error\" or \"File Monitoring from Application Log\"\n";
+	$usage .= "\t-o: occurrence, whatever you're looking for in the log file Ex.: \"error\"\n";
+	$usage .= "\t-f: outputformat, what kind of output you want? Ex.: json, xml, icinga\n";
+	$usage .= "\t-w: warning, threshold for Warning Message Ex.: 30\n";
+	$usage .= "\t-c: critical, threshold for Critical Message Ex.: 50 (must be bigger than warning number)\n";
+
+	return $usage;
+
+}
+
+#[ Status Calculation Function ]-----------------------------------------------#
+
+sub statusGenerate {
+
+	if($value < $warning){
+		$returnCode = 0;
+		$pluginOutput = "OK";
+	}
+	if($value >= $warning){
+		$returnCode = 1;
+		$pluginOutput = "[WARNING] Number of events \"$occurrence\" in logfile is greater than $warning";
+	}
+	if($value >= $critical){
+		$returnCode = 2;
+		$pluginOutput = "[WARNING] Number of events \"$occurrence\" in logfile is greater than $critical";
+	}
+
+	return $returnCode, $pluginOutput;
+
+}
+
+#[ Icinga Output Function ]----------------------------------------------------#
+
+sub icingaGenerate {
+
+	#[<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
+
+	$timestamp = shift;
+	$key = shift;
+	$value = shift;
+	$code = shift;
+	$outputMsg = shift;
+	$icingaoutput = "[$timestamp] PROCESS_SERVICE_CHECK_RESULT;$hostname;$key;$code;$outputMsg";
+	return $icingaoutput;
+
+}
+
 #[ XML Output Function ]-------------------------------------------------------#
 
 sub xmlGenerate {
 	$timestamp = shift;
 	$key = shift;
 	$value = shift;
+	$code = shift;
+	$outputMsg = shift;
 	$xmloutput = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-	$ds = {filematch => [{hostname => [$hostname], timestamp => [$timestamp], key => [$key], value => [$value]}]};
+	$ds = {filematch => [{hostname => [$hostname], timestamp => [$timestamp], key => [$key], value => [$value], code => [$code], outputMsg => [$outputMsg]}]};
 	$xmloutput .= XMLout($ds, Rootname => "");
 	return $xmloutput;
 }
@@ -182,7 +232,9 @@ sub jsonGenerate {
 	$timestamp = shift;
 	$key = shift;
 	$value = shift;
-	%ds = ('filematch' => [{'hostname' => $hostname}, {'timestamp' => $timestamp}, {'key' => $key}, {'value' => $value}]);
+	$code = shift;
+	$outputMsg = shift;
+	%ds = ('filematch' => [{'hostname' => $hostname}, {'timestamp' => $timestamp}, {'key' => $key}, {'value' => $value}, {'code' => $code }, {'outputMsg' => $outputMsg }]);
 	$jsonoutput = encode_json \%ds;
 	return $jsonoutput;
 }
@@ -214,6 +266,7 @@ while(<LOG>){
 }
 
 $value = $keycount{count};
+($code, $outputMsg) = statusGenerate($value);
 $newseekdb .= $log ."=". tell(LOG) ."|". $currsize .";";
 
 open(SEEK,"> $seekdb") or genericExitFunc(1, "Error trying to open the file $seekdb");
@@ -224,11 +277,14 @@ close(LOG);
 #[ Verify the chosen output format, call the function and print ]--------------#
 
 if ($outputformat =~ "xml") {
-	$output .= xmlGenerate($timestamp, $key, $value);
+	$output .= xmlGenerate($timestamp, $key, $value, $code, $outputMsg);
 } elsif ($outputformat =~ "json") {
-	$output .= jsonGenerate($timestamp, $key, $value);
+	$output .= jsonGenerate($timestamp, $key, $value, $code, $outputMsg);
+} elsif ($outputformat =~ "icinga"){
+	$output .= icingaGenerate($timestamp, $key, $value, $code, $outputMsg);
 } else {
-	$output .= "$key: $value\n";
+	$outputFormatError = scriptUsage("outputformat option must be xml, json or icinga");
+	genericExitFunc(1, $outputFormatError);
 }
 
-genericExitFunc(0, $output);
+genericExitFunc($code, $output);

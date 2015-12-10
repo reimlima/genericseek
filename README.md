@@ -12,6 +12,8 @@ Changelog
 
 2015-01-23 - v1.5 - A lot of improvements in config file read, write and recover
 
+2015-12-10 - v2   - No more config file, only commandline options
+
 Dependencies
 --------------------------------------------------------------------------------
 
@@ -19,37 +21,23 @@ As a Perl script you will need to install via CPAN the Modules below:
 
 	JSON
 	XML::Simple
-	Config::Simple
+	Getopt::Std
+	Sys::Hostname
+	File::Basename
 
 How to Use
 --------------------------------------------------------------------------------
 
-CONF FILE:
+COMMANDLINE OPTIONS
 
-Just  fill  the  configuration  file  with  the  values  for  key,  log, dbfile,
-occurrence and outputformat, then run the script.
+	Usage: genericseek -l <log> -k <key> -o '<log occurrence>' -f <outputformat> -w <warning> -c <critical>
 
-Legend:
-
-	key: the indentificator that will be used by you to show in your monitoring
-	interface.
-	log: Log file that will be read by the script.
-	dbfile: Position control file  used by the script to know the position for
-	the next search execution.
-	occurrence: The string that the script will look for. Also work with regex
-	outputformat: xml, json or simple "key: value". You choise.
-
-Example:
-
-	key=""
-	log="/var/log/messages"
-	dbfile="genericseek.db"
-	occurrence="error"
-	outputformat="xml"
-
-NOTE:
-
-If your config file is empty for some reason, just run the script with -r option
+        -l: logfile, Ex.: /var/log/message
+        -k: key, something to be used as output message Ex.: "error" or "File Monitoring from Application Log"
+        -o: occurrence, whatever you're looking for in the log file Ex.: "error"
+        -f: outputformat, what kind of output you want? Ex.: json, xml, icinga
+        -w: warning, threshold for Warning Message Ex.: 30
+        -c: critical, threshold for Critical Message Ex.: 50 (must be bigger than warning number)
 
 DB FILE:
 
@@ -61,26 +49,36 @@ execute a "touch command" and leave it empty, the script will do the rest.
 Output Format
 --------------------------------------------------------------------------------
 
-This  is how the output will look depending of your choise (this is just a dummy
-example OK?).
+This  is how the output will look depending of your choise (this is just a dummy example OK?).
 
 XML Output:
 
 	<?xml version="1.0" encoding="UTF-8"?>
-	<filematch>
-		<timestamp>1234567890</timestamp>
-		<key>bla</key>
-		<value>50</value>
+		<filematch>
+		<key>test</key>
+		<code>0</code>
+		<hostname>myhost</hostname>
+		<outputMsg>OK</outputMsg>
+		<timestamp>1449756463</timestamp>
+		<value>0</value>
 	</filematch>
 
-JSON:
+JSON OUTPUT:
 
-	{ "filemath": [
-	        {"timestamp": 1234567890},
-	        {"key": "bla"},
-	        {"value": 50}
-	]}
+	{"filematch": [{
+		"hostname": "c019531"
+	}, {
+		"timestamp": 1449756524
+	}, {
+		"key": "test"
+	}, {
+		"value": "0"
+	}, {
+		"code": 0
+	}, {
+		"outputMsg": "OK"
+	}]}
 
-"key value":
+ICINGA OUTPUT:
 
-	bla: 50 (no timestamp in here)
+	[1449756590] PROCESS_SERVICE_CHECK_RESULT;c019531;test;0;OK
