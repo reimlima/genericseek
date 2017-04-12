@@ -66,7 +66,7 @@ XML Output:
 JSON OUTPUT:
 
 	{"filematch": [{
-		"hostname": "c019531"
+		"hostname": "myhost"
 	}, {
 		"timestamp": 1449756524
 	}, {
@@ -81,4 +81,4 @@ JSON OUTPUT:
 
 ICINGA OUTPUT:
 
-	[1449756590] PROCESS_SERVICE_CHECK_RESULT;c019531;test;0;OK
+	[1449756590] PROCESS_SERVICE_CHECK_RESULT;myhost;test;0;OK
