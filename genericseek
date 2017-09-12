@@ -1,82 +1,71 @@
 #!/usr/bin/perl
 
-#[ Script ]--------------------------------------------------------------------#
-#                                                                              #
-# genericseek                                                                  #
-#                                                                              #
-# PT-br:                                                                       #
-# Conta quantidade de ocorrências de um trecho até o final do log e armazena a #
-# posição para contar a partir de onde parou.                                  #
-# Ótimo  para  criar  monitorações  em  tempo  real  de  logs  que estão sendo #
-# incrementados.                                                               #
-# ----------------------------                                                 #
-#                                                                              #
-# EN:                                                                          #
-# Counts  number  of occurrences of a stretch to the end of the log and stores #
-# the position to tell from where it stopped.                                  #
-# Great  for  creating  monitoring  processes in real time logs that are being #
-# increased.                                                                   #
-#                                                                              #
-# rlima@gmail.com                                                              #
-# $Id: genericseek,v 2 2015/02/05 rlima Exp rlima $                            #
-#                                                                              #
-#[ License ]-------------------------------------------------------------------#
-#                                                                              #
-# Copyright (c) 2015 Reinaldo Marques de Lima reimlima@gmail.com               #
-#                                                                              #
-# PT-br:                                                                       #
-# A permissão  é  concedida,  a título gratuito, a qualquer pessoa que obtenha #
-# uma   cópia   deste   software   e   arquivos   de  documentação  associados #
-# (o "Software"),  para  lidar  com  o  Software sem restrição, incluindo, sem #
-# limitação,  os  direitos  de  usar,  copiar,  modificar,  mesclar, publicar, #
-# distribuir,  sublicenciar,  e / ou vender cópias do Software, e permitir que #
-# as  pessoas  a  quem  o  Software  é fornecido o façam, sujeito às seguintes #
-# condições:                                                                   #
-#                                                                              #
-# O  aviso de copyright acima e este aviso de permissão devem ser incluídos em #
-# todas as cópias ou partes substanciais do Software.                          #
-#                                                                              #
-# O  SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO, EXPRESSA #
-# OU  IMPLÍCITA,  INCLUINDO,  SEM  LIMITAÇÃO, AS GARANTIAS DE COMERCIALIZAÇÃO, #
-# ADEQUAÇÃO  A  UM  DETERMINADO  FIM E NÃO VIOLAÇÃO. EM NENHUM CASO OS AUTORES #
-# OU  DIREITOS AUTORAIS TITULARES  SERÃo RESPONSÁVEIS POR QUALQUER RECLAMAÇÃO, #
-# DANOS  OU  OUTRAS  RESPONSABILIDADES,  SEJA  EM  UMA  AÇÃO DE CUMPRIMENTO DE #
-# CONTRATO OU DE OUTRA FORMA, DECORRENTE DE, OU EM CONEXÃO COM O SOFTWARE OU O #
-# USO OU OUTRAS FUNÇÕES DO SOFTWARE.                                           #
-#                                                                              #
-# Exceto  conforme  contido no presente aviso, o nome do (s) dos detentores de #
-# direitos  autorais acima não devem ser utilizados em publicidade ou de outra #
-# forma  para  promover  a venda, uso ou outras negociações deste Software sem #
-# autorização prévia por escrito.                                              #
-#                                                                              #
-#----------------------------                                                  #
-#                                                                              #
-# EN:                                                                          #
-# Permission is hereby granted, free of charge, to any person obtaining a copy #
-# of  this  software  and  associated  documentation  files  (the "Software"), #
-# to  deal  in  the Software without restriction, including without limitation #
-# the  rights  to  use,  copy, modify, merge, publish, distribute, sublicense, #
-# and/or  sell  copies  of  the  Software,  and  to permit persons to whom the #
-# Software is furnished to do so, subject to the following conditions:         #
-#                                                                              #
-# The  above  copyright notice and this permission notice shall be included in #
-# all copies or substantial portions of the Software.                          #
-#                                                                              #
-# THE  SOFTWARE  IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR #
-# IMPLIED,  INCLUDING  BUT  NOT  LIMITED TO THE WARRANTIES OF MERCHANTABILITY, #
-# FITNESS  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE #
-# AUTHORS  OR  COPYRIGHT  HOLDERS  BE  LIABLE  FOR ANY CLAIM, DAMAGES OR OTHER #
-# LIABILITY,   WHETHER   IN   AN   ACTION  OF  CONTRACT,  TORT  OR  OTHERWISE, #
-# ARISING FROM,  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER #
-# DEALINGS IN THE SOFTWARE.                                                    #
-#                                                                              #
-# Except  as  contained  in  this  notice,  the name(s) of the above copyright #
-# holders  shall  not be used in advertising or otherwise to promote the sale, #
-# use or other dealings in this Software without prior written authorization.  #
-#                                                                              #
-#------------------------------------------------------------------------------#
+#[ Script ]-------------------------------------------------------------------------------------------------#
+#                                                                                                           #
+# genericseek                                                                                               #
+#                                                                                                           #
+# PT-br:                                                                                                    #
+# Conta quantidade de ocorrências de um trecho até o final do log e armazena a posição para contar a partir #
+# de onde parou.                                                                                            #
+# Ótimo  para  criar  monitorações  em  tempo  real  de  logs  que estão sendo incrementados.               #
+# ----------------------------                                                                              #
+#                                                                                                           #
+# EN:                                                                                                       #
+# Counts  number  of  occurrences  of  a stretch to the end of the log and stores the position to tell from #
+# where it stopped.                                                                                         #
+# Great  for  creating  monitoring  processes in real time logs that are being increased.                   #
+#                                                                                                           #
+# rlima@gmail.com                                                                                           #
+# $Id: genericseek,v 2 2015/02/05 rlima Exp rlima $                                                         #
+#                                                                                                           #
+#[ License ]------------------------------------------------------------------------------------------------#
+#                                                                                                           #
+# Copyright (c) 2017 Reinaldo Marques de Lima reimlima@gmail.com                                            #
+#                                                                                                           #
+# PT-br:                                                                                                    #
+# A  permissão  é  concedida, a título gratuito, a qualquer pessoa que obtenha uma   cópia deste software e #
+# arquivos de  documentação  associados (o "Software"), para lidar com o Software sem restrição, incluindo, #
+# sem limitação,  os  direitos  de  usar,  copiar,  modificar, mesclar, publicar, distribuir, sublicenciar, #
+# e / ou vender cópias do Software, e  permitir  que as  pessoas a  quem  o  Software  é fornecido o façam, #
+# sujeito às seguintes condições:                                                                           #
+#                                                                                                           #
+# O  aviso  de  copyright  acima e este aviso de permissão devem ser incluídos em todas as cópias ou partes #
+# substanciais do Software.                                                                                 #
+#                                                                                                           #
+# O  SOFTWARE  É  FORNECIDO  "COMO ESTÁ", SEM GARANTIA  DE QUALQUER TIPO, EXPRESSA OU IMPLÍCITA, INCLUINDO, #
+# SEM LIMITAÇÃO, AS GARANTIAS DE COMERCIALIZAÇÃO, ADEQUAÇÃO A UM DETERMINADO FIM E NÃO VIOLAÇÃO. EM  NENHUM #
+# CASO  OS  AUTORES  OU  DIREITOS  AUTORAIS TITULARES  SERÃO RESPONSÁVEIS POR QUALQUER RECLAMAÇÃO, DANOS OU #
+# OUTRAS RESPONSABILIDADES, SEJA EM UMA  AÇÃO DE CUMPRIMENTO DE CONTRATO  OU  DE  OUTRA  FORMA,  DECORRENTE #
+# DE, OU EM CONEXÃO COM O SOFTWARE OU O USO OU OUTRAS FUNÇÕES DO SOFTWARE.                                  #
+#                                                                                                           #
+# Exceto  conforme  contido  no  presente aviso, o nome do(s) dos detentores de direitos autorais acima não #
+# devem ser utilizados em publicidade ou de outra forma  para  promover  a venda, uso ou outras negociações #
+# deste Software sem autorização prévia por escrito.                                                        #
+#                                                                                                           #
+# ----------------------------                                                                              #
+#                                                                                                           #
+# EN:                                                                                                       #
+# Permission  is  hereby  granted, free  of  charge,  to  any  person obtaining a copy of this software and #
+# associated  documentation  files (the "Software"), to deal in the Software without restriction, including #
+# without  limitation  the  rights  to  use,  copy, modify, merge, publish, distribute, sublicense,  and/or #
+# sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to #
+# the following conditions:                                                                                 #
+#                                                                                                           #
+# The  above  copyright  notice  and  this permission notice shall be included in all copies or substantial #
+# portions of the Software.                                                                                 #
+#                                                                                                           #
+# THE  SOFTWARE  IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,  INCLUDING BUT NOT  #
+# LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS  FOR  A  PARTICULAR  PURPOSE AND  NONINFRINGEMENT.  #
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER  LIABILITY, #
+# WHETHER  IN  AN  ACTION  OF  CONTRACT, TORT  OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE #
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                                    #
+#                                                                                                           #
+# Except  as  contained  in  this  notice,  the name(s) of the above copyright holders shall not be used in #
+# advertising  or  otherwise  to  promote  the  sale,  use or other dealings in this Software without prior #
+# written authorization.                                                                                    #
+#-----------------------------------------------------------------------------------------------------------#
 
-#[ Modules ]-------------------------------------------------------------------#
+#[ Modules ]------------------------------------------------------------------------------------------------#
 
 use strict;
 use warnings;
@@ -86,37 +75,14 @@ use XML::Simple;
 use Sys::Hostname;
 use File::Basename;
 
-#[ Variables ]-----------------------------------------------------------------#
+#[ Variables ]----------------------------------------------------------------------------------------------#
 
-my $ds;
 my %ds;
-my $key;
-my $log;
-my $code;
-my $seek;
-my $value;
-my $usage;
-my $output;
-my $warning;
-my $critical;
-my $exitcode;
 my %keycount;
-my $currsize;
-my $outputMsg;
-my $newseekdb;
-my $xmloutput;
-my $jsonoutput;
-my $occurrence;
-my $returnCode;
-my $exitmessage;
-my $icingaoutput;
-my $outputformat;
-my $pluginOutput;
 my %opthash = ();
-my $getoptsError;
-my $thresholdError;
-my $personalMessage;
-my $outputFormatError;
+my ($ds, $key, $log, $code, $seek, $value, $usage, $output, $warning, $critical, $exitcode);
+my ($currsize, $outputMsg, $newseekdb, $occurrence, $returnCode, $exitmessage, $monitOutput);
+my ($outputformat, $pluginOutput, $getoptsError, $thresholdError, $personalMessage, $outputFormatError);
 my $timestamp = time();
 my $hostname = hostname;
 my $script = basename("$0");
@@ -124,7 +90,7 @@ my $seekdb = "genericseek.db";
 
 $keycount{count} = '0';
 
-#[ Command line options ]------------------------------------------------------#
+#[ Command line options ]-----------------------------------------------------------------------------------#
 
 getopts(":l:o:k:f:w:c:", \%opthash);
 if (keys(%opthash) != 6){
@@ -149,7 +115,7 @@ if ($warning >= $critical) {
 	genericExitFunc(1, $thresholdError);
 }
 
-#[ Database File Check ]-------------------------------------------------------#
+#[ Database File Check ]------------------------------------------------------------------------------------#
 
 if (! -e $seekdb){
 	open(DBFILE,"> $seekdb") or genericExitFunc(1, "Error trying to open the file $seekdb");
@@ -157,7 +123,7 @@ if (! -e $seekdb){
 	close(DBFILE);
 }
 
-#[ Generic exit function ]-----------------------------------------------------#
+#[ Generic exit function ]----------------------------------------------------------------------------------#
 
 sub genericExitFunc {
 	$exitcode = shift;
@@ -166,29 +132,24 @@ sub genericExitFunc {
 	exit $exitcode;
 }
 
-#[ Usage Function ]------------------------------------------------------------#
+#[ Usage Function ]-----------------------------------------------------------------------------------------#
 
 sub scriptUsage {
-
 	$personalMessage = shift;
-
 	$usage  = "$personalMessage\n\n";
 	$usage .= "Usage: $script -l <log> -k <key> -o '<log occurrence>' -f <outputformat> -w <warning> -c <critical>\n\n";
 	$usage .= "\t-l: logfile, Ex.: /var/log/message\n";
 	$usage .= "\t-k: key, something to be used as output message Ex.: \"error\" or \"File Monitoring from Application Log\"\n";
 	$usage .= "\t-o: occurrence, whatever you're looking for in the log file Ex.: \"error\"\n";
-	$usage .= "\t-f: outputformat, what kind of output you want? Ex.: json, xml, icinga\n";
+	$usage .= "\t-f: outputformat, what kind of output you want? Ex.: json, xml, icinga, zabbix\n";
 	$usage .= "\t-w: warning, threshold for Warning Message Ex.: 30\n";
 	$usage .= "\t-c: critical, threshold for Critical Message Ex.: 50 (must be bigger than warning number)\n";
-
 	return $usage;
-
 }
 
-#[ Status Calculation Function ]-----------------------------------------------#
+#[ Status Calculation Function ]----------------------------------------------------------------------------#
 
 sub statusGenerate {
-
 	if($value < $warning){
 		$returnCode = 0;
 		$pluginOutput = "OK";
@@ -201,55 +162,35 @@ sub statusGenerate {
 		$returnCode = 2;
 		$pluginOutput = "[WARNING] Number of events \"$occurrence\" in logfile is greater than $critical";
 	}
-
 	return $returnCode, $pluginOutput;
-
 }
 
-#[ Icinga Output Function ]----------------------------------------------------#
+#[ Icinga Output Function ]---------------------------------------------------------------------------------#
 
-sub icingaGenerate {
-
-	#[<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
-
+sub outputGenerate {
 	$timestamp = shift;
 	$key = shift;
 	$value = shift;
 	$code = shift;
 	$outputMsg = shift;
-	$icingaoutput = "[$timestamp] PROCESS_SERVICE_CHECK_RESULT;$hostname;$key;$code;$outputMsg";
-	return $icingaoutput;
-
+	$outputformat = shift;
+	if ($outputformat =~ "icinga"){
+		$monitOutput = "[$timestamp] PROCESS_SERVICE_CHECK_RESULT;$hostname;$key;$code;$outputMsg";
+	} elsif ($outputformat =~ "xml") {
+		$monitOutput = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+		$ds = {filematch => [{hostname => [$hostname], timestamp => [$timestamp], key => [$key], value => [$value], code => [$code], outputMsg => [$outputMsg]}]};
+		$monitOutput .= XMLout($ds, Rootname => "");
+	} elsif ($outputformat =~ "json") {
+		%ds = ('filematch' => [{'hostname' => $hostname}, {'timestamp' => $timestamp}, {'key' => $key}, {'value' => $value}, {'code' => $code }, {'outputMsg' => $outputMsg }]);
+		$monitOutput = encode_json \%ds;
+	} else {
+		%ds = ('request' => 'sender data', 'data' => [{'host' => $hostname, 'key' => $key, 'value' => $value}], 'clock' => $timestamp);
+		$monitOutput = encode_json \%ds;
+	}
+	return $monitOutput;
 }
 
-#[ XML Output Function ]-------------------------------------------------------#
-
-sub xmlGenerate {
-	$timestamp = shift;
-	$key = shift;
-	$value = shift;
-	$code = shift;
-	$outputMsg = shift;
-	$xmloutput = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-	$ds = {filematch => [{hostname => [$hostname], timestamp => [$timestamp], key => [$key], value => [$value], code => [$code], outputMsg => [$outputMsg]}]};
-	$xmloutput .= XMLout($ds, Rootname => "");
-	return $xmloutput;
-}
-
-#[ JSON Output Function ]------------------------------------------------------#
-
-sub jsonGenerate {	
-	$timestamp = shift;
-	$key = shift;
-	$value = shift;
-	$code = shift;
-	$outputMsg = shift;
-	%ds = ('filematch' => [{'hostname' => $hostname}, {'timestamp' => $timestamp}, {'key' => $key}, {'value' => $value}, {'code' => $code }, {'outputMsg' => $outputMsg }]);
-	$jsonoutput = encode_json \%ds;
-	return $jsonoutput;
-}
-
-#[ Main Script ]---------------------------------------------------------------#
+#[ Main Script ]--------------------------------------------------------------------------------------------#
 
 open(SEEK, $seekdb) or genericExitFunc(1, "Error trying to open the file $seekdb");
 $seek = <SEEK>;
@@ -284,16 +225,18 @@ print SEEK "$newseekdb";
 close(SEEK);
 close(LOG);
 
-#[ Verify the chosen output format, call the function and print ]--------------#
+#[ Verify the chosen output format, call the function and print ]-------------------------------------------#
 
 if ($outputformat =~ "xml") {
-	$output .= xmlGenerate($timestamp, $key, $value, $code, $outputMsg);
+	$output .= outputGenerate($timestamp, $key, $value, $code, $outputMsg, $outputformat);
 } elsif ($outputformat =~ "json") {
-	$output .= jsonGenerate($timestamp, $key, $value, $code, $outputMsg);
+	$output .= outputGenerate($timestamp, $key, $value, $code, $outputMsg, $outputformat);
 } elsif ($outputformat =~ "icinga"){
-	$output .= icingaGenerate($timestamp, $key, $value, $code, $outputMsg);
+	$output .= outputGenerate($timestamp, $key, $value, $code, $outputMsg, $outputformat);
+} elsif ($outputformat =~ "zabbix"){
+	$output .= outputGenerate($timestamp, $key, $value, $code, $outputMsg, $outputformat);
 } else {
-	$outputFormatError = scriptUsage("outputformat option must be xml, json or icinga");
+	$outputFormatError = scriptUsage("outputformat option must be xml, json, icinga or zabbix");
 	genericExitFunc(1, $outputFormatError);
 }
 
