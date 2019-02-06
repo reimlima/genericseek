@@ -14,7 +14,9 @@ processes in real time logs that are being increased.
 
 * **10/12/2015 - v2   - No more config file, only commandline options**
 
-* **12/09/2017 - v3   - Zabbix is now an option of output, Some improvements under the hood **
+* **12/09/2017 - v3   - Zabbix is now an option of output, Some improvements under the hood**
+
+* **06/02/2019 - v4   - Now you can send your monitoring stuff to Slack**
 
 # Dependencies
 --------------------------------------------------------------------------------
@@ -26,6 +28,10 @@ As a Perl script you will need to install via CPAN the Modules below:
 	Getopt::Std
 	Sys::Hostname
 	File::Basename
+	CPAN::Meta
+	CPAN::Meta::YAML
+	Module::Build
+	WebService::Slack::IncomingWebHook
 
 # How to Use
 --------------------------------------------------------------------------------
@@ -47,6 +53,14 @@ For  the  very  first time running the script this file must be created, so just
 execute a "touch command" and leave it empty, the script will do the rest.
 
 	# touch genericseek.db
+
+# Prepare Slack to receive data
+
+First things first, you have to read and follow the instructions in this [Documentation] before send something to slack.
+
+Next, when you finally have the webhook URL you want to send your notifications change the parameter 'webhook_url' (line 92 in the script)
+
+Ensure that the module 'WebService::Slack::IncomingWebHook' is properly installed.
 
 # Output Format
 --------------------------------------------------------------------------------
@@ -104,3 +118,13 @@ ZABBIX OUTPUT:
 	"clock": 1505235023
 }
 ```
+
+SLACK OUTPUT:
+
+```
+	10.10.10.10 -> slack: error.log => [CRITICAL] Number of events "PHP Fatal error" in logfile is greater than 50
+```
+
+[//]: # (Links bellow)
+
+   [Documentation]: <https://api.slack.com/tutorials/slack-apps-hello-world>

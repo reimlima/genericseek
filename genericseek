@@ -74,6 +74,7 @@ use Getopt::Std;
 use XML::Simple;
 use Sys::Hostname;
 use File::Basename;
+use WebService::Slack::IncomingWebHook;
 
 #[ Variables ]----------------------------------------------------------------------------------------------#
 
@@ -87,6 +88,10 @@ my $timestamp = time();
 my $hostname = hostname;
 my $script = basename("$0");
 my $seekdb = "genericseek.db";
+my $client = WebService::Slack::IncomingWebHook->new(
+        webhook_url => 'https://hooks.slack.com/services/ADD/HERE/slackWebhookAddress',
+        username   => 'YourUserName',
+);
 
 $keycount{count} = '0';
 
@@ -141,7 +146,7 @@ sub scriptUsage {
 	$usage .= "\t-l: logfile, Ex.: /var/log/message\n";
 	$usage .= "\t-k: key, something to be used as output message Ex.: \"error\" or \"File Monitoring from Application Log\"\n";
 	$usage .= "\t-o: occurrence, whatever you're looking for in the log file Ex.: \"error\"\n";
-	$usage .= "\t-f: outputformat, what kind of output you want? Ex.: json, xml, icinga, zabbix\n";
+	$usage .= "\t-f: outputformat, what kind of output you want? Ex.: json, xml, icinga, zabbix, slack\n";
 	$usage .= "\t-w: warning, threshold for Warning Message Ex.: 30\n";
 	$usage .= "\t-c: critical, threshold for Critical Message Ex.: 50 (must be bigger than warning number)\n";
 	return $usage;
@@ -160,7 +165,7 @@ sub statusGenerate {
 	}
 	if($value >= $critical){
 		$returnCode = 2;
-		$pluginOutput = "[WARNING] Number of events \"$occurrence\" in logfile is greater than $critical";
+		$pluginOutput = "[CRITICAL] Number of events \"$occurrence\" in logfile is greater than $critical";
 	}
 	return $returnCode, $pluginOutput;
 }
@@ -227,16 +232,17 @@ close(LOG);
 
 #[ Verify the chosen output format, call the function and print ]-------------------------------------------#
 
-if ($outputformat =~ "xml") {
+if ($outputformat =~ /xml|json|icinga|zabbix/) {
 	$output .= outputGenerate($timestamp, $key, $value, $code, $outputMsg, $outputformat);
-} elsif ($outputformat =~ "json") {
-	$output .= outputGenerate($timestamp, $key, $value, $code, $outputMsg, $outputformat);
-} elsif ($outputformat =~ "icinga"){
-	$output .= outputGenerate($timestamp, $key, $value, $code, $outputMsg, $outputformat);
-} elsif ($outputformat =~ "zabbix"){
-	$output .= outputGenerate($timestamp, $key, $value, $code, $outputMsg, $outputformat);
+} elsif ($outputformat =~ /slack/){
+	if ($code != "0"){
+		$client->post( text => "$hostname -> slack: $logname => $outputMsg", );
+		$output = "Sending monitoring to Slack";
+	} else {
+		$output = "Everithing OK";
+	}
 } else {
-	$outputFormatError = scriptUsage("outputformat option must be xml, json, icinga or zabbix");
+	$outputFormatError = scriptUsage("outputformat option must be xml, json, icinga, zabbix or slack");
 	genericExitFunc(1, $outputFormatError);
 }
 
